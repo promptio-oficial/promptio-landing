@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+  <html lang="es">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROMPTIO — Aprende a pensar claro para hablar con IA</title>
+  <meta name="description" content="Aprende a pensar claro para hablar con IA (y con la gente). Únete a la lista y recibe contenido antes que nadie.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --cream:#F4EEDD;
+      --navy:#1C2B45;
+    --gold:#D9A441;
+          --teal:#3E8C86;
+    --navy-soft: rgba(28,43,69,0.12);
+}
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+      body{
+        font-family:'Inter', sans-serif;
+    background:var(--cream);
+    color:var(--navy);
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+}
+  .container{
+        width:100%;
+    max-width:640px;
+    margin:0 auto;
+    padding:24px;
+    display:flex;
+    flex-direction:column;
+    flex:1;
+  }
+  header{ padding-top:12px; padding-bottom:8px; }
+  .logo{
+        font-family:'Archivo Black', sans-serif;
+    font-size:22px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+  .logo-prompt{ color:var(--navy); }
+  .io-i{ color:var(--teal); }
+  .io-o{ color:var(--gold); }
+  main{
+        flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    gap:20px;
+    padding:32px 0;
+}
+  .accent-line{
+        width:56px;
+    height:4px;
+    background:var(--gold);
+    border-radius:2px;
+}
+  h1{
+        font-family:'Archivo Black', sans-serif;
+    text-transform:uppercase;
+    font-size:clamp(28px, 6vw, 48px);
+    line-height:1.15;
+    color:var(--navy);
+    max-width:560px;
+}
+  h1 .accent{ color:var(--teal); }
+  .subheadline{
+        font-size:clamp(15px, 2.4vw, 18px);
+    color:rgba(28,43,69,0.85);
+    max-width:480px;
+    line-height:1.5;
+}
+  form{
+        width:100%;
+    max-width:420px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-top:8px;
+}
+  .form-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  input[type="email"]{
+    flex:1;
+    min-width:200px;
+    padding:14px 16px;
+    border-radius:8px;
+    border:2px solid var(--navy-soft);
+    background:#fff;
+        font-size:16px;
+    color:var(--navy);
+    outline:none;
+  }
+  input[type="email"]:focus{ border-color:var(--teal); }
+  button{
+        padding:14px 22px;
+    border:none;
+    border-radius:8px;
+    background:var(--navy);
+    color:var(--cream);
+    font-family:'Archivo Black', sans-serif;
+    text-transform:uppercase;
+    font-size:15px;
+    letter-spacing:0.5px;
+    cursor:pointer;
+    transition:background 0.2s ease, transform 0.1s ease;
+}
+  button:hover{ background:var(--teal); }
+  button:active{ transform:scale(0.98); }
+  .microcopy{ font-size:13px; color:rgba(28,43,69,0.6); }
+  .hidden{ display:none; }
+  footer{
+        padding:20px 0 8px;
+    text-align:center;
+    font-size:14px;
+    color:rgba(28,43,69,0.7);
+}
+  footer a{
+        color:var(--navy);
+    font-weight:600;
+    text-decoration:none;
+    border-bottom:2px solid var(--gold);
+  }
+  footer a:hover{ color:var(--teal); border-color:var(--teal); }
+  @media (max-width:480px){
+    .form-row{ flex-direction:column; }
+    button{ width:100%; }
+    input[type="email"]{ width:100%; }
+}
+</style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="logo">
+          <span class="logo-prompt">PROMPT</span><span class="io-i">I</span><span class="io-o">O</span>
+        </div>
+      </header>
+      <main>
+        <div class="accent-line" aria-hidden="true"></div>
+        <h1>Aprende a pensar claro para hablar con <span class="accent">IA</span> (y con la gente)</h1>
+      <p class="subheadline">
+        Súmate a la lista y recibe tips de ingeniería de prompts, contenido exclusivo que no publico en Instagram, y acceso anticipado a lo próximo que estamos preparando.
+        </p>
+        <form name="promptio-subscribers" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+          <input type="hidden" name="form-name" value="promptio-subscribers" />
+          <p class="hidden">
+            <label>No llenar esto: <input name="bot-field" /></label>
+        </p>
+        <div class="form-row">
+          <input type="email" name="email" placeholder="tu@email.com" required aria-label="Correo electrónico" />
+                <button type="submit">Unirme</button>
+              </div>
+              <p class="microcopy">Sin spam. Cancela cuando quieras.</p>
+      </form>
+    </main>
+          <footer>
+            <a href="https://www.instagram.com/promptio_/" target="_blank" rel="noopener noreferrer">@promptio_</a>
+          </footer>
+        </div>
+      </body>
+      </html>
