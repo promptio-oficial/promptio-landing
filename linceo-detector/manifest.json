@@ -3,7 +3,7 @@
   "name": "LINCEO DETECTOR: stack, privacidad y seguridad de cualquier web",
   "short_name": "LINCEO",
   "version": "1.1.0",
-  "description": "Descubre el stack de un sitio, qué datos tuyos recopila y qué riesgos tiene (rastreo, grabación de sesión, phishing), con acciones claras. Auditoría, DNS e historial. Sin enviar tus datos.",
+  "description": "Descubre el stack de cualquier web, quién rastrea tus datos y sus riesgos de seguridad, con acciones claras. Sin enviar tus datos.",
   "minimum_chrome_version": "102",
   "permissions": [
     "activeTab",

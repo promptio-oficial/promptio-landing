@@ -1,7 +1,7 @@
 # Ficha para Chrome Web Store
 
 **Nombre:** LINCEO DETECTOR: stack, privacidad y seguridad de cualquier web
-**Resumen (≤132):** Descubre el stack de un sitio y qué datos tuyos recopila: rastreadores, grabación de sesión, riesgos y qué hacer.
+**Resumen (≤132):** Descubre el stack de cualquier web, quién rastrea tus datos y sus riesgos de seguridad, con acciones claras. Sin enviar tus datos.
 **Categoría:** Herramientas para desarrolladores
 **Idioma:** Español
 
