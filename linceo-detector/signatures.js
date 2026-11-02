@@ -1,4 +1,6 @@
-/* Firmas de tecnologías. Sin barras invertidas: "[.]" = punto literal, "[0-9]" = dígito.
+/* POLÍTICA: estas firmas son de autoría propia. No copiar ni adaptar huellas de Wappalyzer ni de sus forks (GPL-3.0)
+   ni datos de rastreadores con licencia no comercial. Ver FIRMAS.md.
+   Firmas de tecnologías. Sin barras invertidas: "[.]" = punto literal, "[0-9]" = dígito.
    Campos: n nombre · c categoría · js globales · jsv ruta de versión · jsk regex sobre claves de window
    dom selectores · domv [selector, atributo-versión] · meta {nombre: regex} · src regex sobre URLs de recursos
    html regex sobre el HTML · hdr {cabecera: regex} · ck regex sobre nombres de cookie · imp tecnologías implícitas.
