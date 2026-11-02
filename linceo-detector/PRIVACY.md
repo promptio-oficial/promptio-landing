@@ -8,7 +8,7 @@ LINCEO DETECTOR analiza la página que tienes abierta **solo cuando pulsas el ic
 - **Re-petición de cabeceras:** para leer cabeceras HTTP, la extensión repite una petición al propio sitio que analizas, desde esa página.
 - Los valores de cookies, almacenamiento y formularios **no se leen ni se guardan**; solo nombres y tamaños.
 
-Contacto: completar con el correo del publicador antes de publicar.
+Contacto: contacto@promptio.cl
 
 - **Cookies a fondo (opcional):** si lo aceptas, Chrome concede a la extensión acceso a las cookies del sitio analizado; se leen para mostrarlas en pantalla y no se guardan ni se envían.
 - **Edad del dominio (RDAP):** al consultar DNS también se envía el dominio a `rdap.org` para mostrar la fecha de registro.
