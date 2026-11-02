@@ -69,8 +69,8 @@
   $('#area').onchange = (e) => { S.area = e.target.value; draw(); };
   $('#rescan').onclick = scan;
   $('#pdf').onclick = () => chrome.tabs.create({ url: chrome.runtime.getURL('report.html') });
-  $('#json').onclick = async (e) => { const out = { ...S.data, audit: { scores: S.audit.scores, overall: S.audit.overall, headerGrade: S.audit.headerGrade.grade, issues: S.audit.issues }, dns: S.dns }; try { await navigator.clipboard.writeText(JSON.stringify(out, null, 2)); flash(e.target, '¡Copiado!'); } catch (x) { download('stacklens-' + S.data.host + '.json', JSON.stringify(out, null, 2), 'application/json'); } };
-  $('#md').onclick = () => download('stacklens-' + S.data.host + '.md', Analysis.markdown(S.data, S.audit, S.dns), 'text/markdown');
+  $('#json').onclick = async (e) => { const out = { ...S.data, audit: { scores: S.audit.scores, overall: S.audit.overall, headerGrade: S.audit.headerGrade.grade, issues: S.audit.issues }, dns: S.dns }; try { await navigator.clipboard.writeText(JSON.stringify(out, null, 2)); flash(e.target, '¡Copiado!'); } catch (x) { download('promptio-detector-' + S.data.host + '.json', JSON.stringify(out, null, 2), 'application/json'); } };
+  $('#md').onclick = () => download('promptio-detector-' + S.data.host + '.md', Analysis.markdown(S.data, S.audit, S.dns), 'text/markdown');
   $('#clear').onclick = async (e) => { e.preventDefault(); const all = await chrome.storage.local.get(null); await chrome.storage.local.remove(Object.keys(all).filter(k => k.startsWith('hist:'))); S.diff = null; S.hist = 0; flash(e.target, 'Historial borrado'); if (S.data) draw(); };
   scan();
 })();

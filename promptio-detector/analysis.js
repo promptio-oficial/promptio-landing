@@ -223,7 +223,7 @@ const Analysis = (() => {
       verifications: Array.from(new Set(txt.filter(x => /(site-verification|^MS=|facebook-domain|apple-domain|atlassian|stripe-verification|docusign|zoom)/i.test(x)).map(x => x.split(/[=:]/)[0]))), issues };
   }
   const markdown = (d, a, dns) => {
-    const L = [`# Informe StackLens: ${d.host}`, `${d.url}  `, `Analizado: ${new Date(d.ts).toLocaleString('es-CL')}`, '',
+    const L = [`# Informe Promptio Detector: ${d.host}`, `${d.url}  `, `Analizado: ${new Date(d.ts).toLocaleString('es-CL')}`, '',
       `**Nota global:** ${a.overall}/100 · **Cabeceras:** ${a.headerGrade.grade}`, '', '| Área | Puntaje |', '|---|---|', ...Object.keys(AREAS).map(k => `| ${AREAS[k]} | ${a.scores[k]} |`), '', '## Qué mejorar'];
     ['alta', 'media', 'baja'].forEach(sv => { const it = a.issues.filter(i => i.sev === sv); if (it.length) { L.push(`\n**Prioridad ${sv}**`); it.forEach(i => L.push(`- [${AREAS[i.area]}] ${i.t}${i.fix ? ' → ' + i.fix : ''}`)); } });
     L.push('', '## Tecnologías'); d.techs.forEach(t => L.push(`- ${t.n}${t.v ? ' ' + t.v : ''} (${t.c})`));

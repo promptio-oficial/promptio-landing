@@ -1,6 +1,6 @@
-# Política de privacidad de StackLens
+# Política de privacidad de Promptio Detector
 
-StackLens analiza la página que tienes abierta **solo cuando pulsas el icono de la extensión**. Todo el análisis ocurre en tu navegador.
+Promptio Detector analiza la página que tienes abierta **solo cuando pulsas el icono de la extensión**. Todo el análisis ocurre en tu navegador.
 
 - **No recopilamos, vendemos ni transmitimos** datos personales, historial de navegación ni contenido de las páginas a servidores del desarrollador. No hay servidores propios ni analítica.
 - **Almacenamiento local:** se guarda en `chrome.storage.local` el último análisis y un historial de hasta 15 análisis por sitio (tecnologías, puntajes) para mostrar «Cambios». Puedes borrarlo con «Borrar historial».

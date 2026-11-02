@@ -1,12 +1,12 @@
 # Ficha para Chrome Web Store
 
-**Nombre:** StackLens: stack, auditoría y cambios de cualquier web
+**Nombre:** Promptio Detector: stack, auditoría y privacidad de cualquier web
 **Resumen (≤132):** Descubre el stack de un sitio y qué datos tuyos recopila: rastreadores, grabación de sesión, riesgos y qué hacer.
 **Categoría:** Herramientas para desarrolladores
 **Idioma:** Español
 
 **Descripción larga:**
-StackLens te muestra, con un clic, qué hay detrás de cualquier sitio web.
+Promptio Detector te muestra, con un clic, qué hay detrás de cualquier sitio web.
 
 SEGURIDAD Y PRIVACIDAD (para el visitante)
 - Quién recibe datos tuyos: analítica, publicidad, grabación de sesión, huellas digitales.
