@@ -25,3 +25,15 @@ small{color:var(--mut)}
 .todo{display:flex;justify-content:space-between;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin:0 0 6px}.todo p{margin:2px 0 0;color:var(--mut)}.act{white-space:nowrap;background:var(--brand);color:#fff;border-color:var(--brand)}
 .k-replay,.k-fingerprint{background:#fee2e2;color:#b91c1c}.k-ads{background:#ffedd5;color:#c2410c}.k-analytics{background:#e0e7ff;color:#4338ca}.limits{font-size:11px;margin-top:14px}
 @media print{.act{display:none}}
+/* ── Rediseño v1.1 ── */
+.ic{width:15px;height:15px;flex:none}
+.verdict{border-radius:12px;padding:14px 16px;margin:0 0 10px;color:#fff;background:linear-gradient(135deg,#059669,#10b981)}
+.verdict.mid{background:linear-gradient(135deg,#ca8a04,#eab308)}.verdict.warn{background:linear-gradient(135deg,#ea580c,#f97316)}.verdict.bad{background:linear-gradient(135deg,#b91c1c,#ef4444)}
+.vt b{display:block;font-size:15px;margin-bottom:3px}.vt span{opacity:.9;font-size:11.5px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px}.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.tile b{display:block;font-size:22px;font-weight:700}.tile span{font-size:10.5px;color:var(--mut)}.tile.bad b{color:var(--bad)}.tile.warn b{color:var(--warn)}.tile.good b{color:var(--good)}
+.spark{width:220px;height:44px;color:var(--brand);vertical-align:middle}.kv.ck{font-size:11.5px}.kv.ck th{width:auto;background:var(--bg)}.card,.issue,.todo,.tile,.metric,.kv{box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.issue{transition:transform .12s}.issue:hover{transform:translateX(2px)}
+
+.pick{display:flex;gap:8px;align-items:center;margin-bottom:8px}.pick select{flex:1;font:inherit;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.cmp td{text-align:center}.cmp th{text-align:left}.cmp td.win{color:var(--good);font-weight:700}
+.chip{display:inline-block;margin:2px 4px 2px 0;padding:2px 9px;border-radius:99px;font-size:11px;background:var(--line);color:var(--ink)}.chip.a{background:#dbeafe;color:#1d4ed8}.chip.b{background:#ffedd5;color:#c2410c}

@@ -1,12 +1,12 @@
 # Ficha para Chrome Web Store
 
-**Nombre:** Promptio Detector: stack, auditoría y privacidad de cualquier web
+**Nombre:** LINCEO DETECTOR: stack, privacidad y seguridad de cualquier web
 **Resumen (≤132):** Descubre el stack de un sitio y qué datos tuyos recopila: rastreadores, grabación de sesión, riesgos y qué hacer.
 **Categoría:** Herramientas para desarrolladores
 **Idioma:** Español
 
 **Descripción larga:**
-Promptio Detector te muestra, con un clic, qué hay detrás de cualquier sitio web.
+LINCEO DETECTOR te muestra, con un clic, qué hay detrás de cualquier sitio web.
 
 SEGURIDAD Y PRIVACIDAD (para el visitante)
 - Quién recibe datos tuyos: analítica, publicidad, grabación de sesión, huellas digitales.
@@ -16,12 +16,13 @@ SEGURIDAD Y PRIVACIDAD (para el visitante)
 - Acciones inmediatas recomendadas.
 
 STACK Y AUDITORÍA
-- +150 tecnologías con versión: frameworks, CMS, plugins de WordPress, servidor, CDN, e-commerce.
+- +200 tecnologías con versión: frameworks, CMS, plugins de WordPress, servidor, CDN, e-commerce.
 - Puntajes de seguridad, SEO, rendimiento, accesibilidad y privacidad con recomendaciones priorizadas.
 - Alertas de tecnologías obsoletas o con vulnerabilidades conocidas.
-- DNS y correo (SPF, DMARC), terceros, historial de cambios, informe PDF, JSON y Markdown.
+- DNS y correo (SPF, DMARC, DNSSEC, edad del dominio), terceros, historial de cambios, comparación entre dos sitios, informe PDF, JSON y Markdown.
+- Cookies a fondo (HttpOnly, Secure, SameSite): opcional, con permiso del usuario solo para el sitio analizado.
 
 Todo se analiza en tu navegador. No recopilamos datos.
 
-**Justificación de permisos:** activeTab/scripting (analizar la pestaña activa al hacer clic); storage (historial local).
+**Justificación de permisos:** activeTab/scripting (analizar la pestaña activa al hacer clic); storage (historial local); permiso opcional cookies y acceso opcional al sitio analizado (solo si el usuario pulsa «Analizar cookies»).
 **Uso de código remoto:** No.

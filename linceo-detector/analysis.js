@@ -107,6 +107,32 @@ const Analysis = (() => {
     return { level, collectors, cookies, ids, local: p.local || [], session: p.session || [], idb: p.idb || [], forms: p.forms || [], permissions: p.permissions || {}, signals: sg, visible: p.visible || {}, risks, actions, consent: consent.map(t => t.n), origin: p.origin || '' };
   }
 
+
+  // Cookies a fondo (requiere permiso opcional chrome.cookies)
+  function cookieAudit(list, host, https) {
+    const out = { rows: [], issues: [] };
+    const sessionish = /(sess|sid$|token|auth|jwt|login|phpsessid|jsessionid)/i;
+    list.forEach(c => {
+      const cls = (CK.find(([re]) => re.test(c.name)) || [, 'sin clasificar'])[1];
+      const first = c.domain.replace(/^[.]/, '') === host || host.endsWith(c.domain.replace(/^[.]/, ''));
+      const days = c.session ? null : Math.round((c.expirationDate * 1000 - Date.now()) / 86400000);
+      out.rows.push({ n: c.name, dom: c.domain, cls, first, secure: c.secure, httpOnly: c.httpOnly, sameSite: c.sameSite, session: !!c.session, days, size: (c.value || '').length });
+      if (sessionish.test(c.name) && !c.httpOnly) out.issues.push(['alta', `Cookie de sesión «${c.name}» sin HttpOnly`, 'Un XSS podría robarla.', 'Marcar la cookie como HttpOnly.']);
+      if (https && !c.secure && (sessionish.test(c.name) || cls === 'sesión / seguridad')) out.issues.push(['media', `Cookie «${c.name}» sin Secure`, 'Puede viajar sin cifrar.', 'Agregar el atributo Secure.']);
+      if (c.sameSite === 'no_restriction' && !c.secure) out.issues.push(['alta', `Cookie «${c.name}» con SameSite=None sin Secure`, 'Los navegadores modernos la rechazan.', 'Agregar Secure o usar SameSite=Lax.']);
+      if (c.sameSite === 'unspecified' && sessionish.test(c.name)) out.issues.push(['baja', `Cookie «${c.name}» sin SameSite explícito`, '', 'Definir SameSite=Lax o Strict.']);
+      if (!c.session && days > 400) out.issues.push(['baja', `Cookie «${c.name}» dura ${days} días`, 'Chrome limita a 400 días.', 'Reducir la duración al mínimo necesario.']);
+    });
+    out.total = out.rows.length; out.third = out.rows.filter(r => !r.first).length; out.noHttpOnly = out.rows.filter(r => !r.httpOnly).length;
+    return out;
+  }
+  function verdict(d, a, pv) {
+    const n = pv.collectors.length, hi = a.counts.alta;
+    const lvl = pv.risks.some(r => r.area === 'seguridad' && r.sev === 'alta') ? 'bad' : (pv.level === 'alto' || hi >= 3) ? 'warn' : (pv.level === 'medio' || a.overall < 75) ? 'mid' : 'good';
+    const t = { bad: 'Precaución: hay señales de riesgo directo para tus cuentas o tu equipo.', warn: 'Uso con cuidado: te rastrean de forma intensa o tiene fallos importantes.', mid: 'Aceptable, con puntos a mejorar y rastreo moderado.', good: 'Sin señales de riesgo relevantes con las comprobaciones disponibles.' }[lvl];
+    return { lvl, text: t, facts: { n, hi, overall: a.overall } };
+  }
+
   function audit(d) {
     const out = [];
     const add = (area, sev, t, detail, fix) => out.push({ area, sev, t, detail: detail || '', fix: fix || '' });
@@ -137,6 +163,52 @@ const Analysis = (() => {
     eol('Bootstrap', v => v && lt(v, '4.0.0'), 'media', 'versión 3 o anterior, fuera de soporte', 'Actualizar a Bootstrap 5.');
     eol('Moment.js', () => true, 'baja', 'en modo mantenimiento', 'Considerar date-fns, Luxon o Day.js.');
     eol('PHP', v => v && lt(v, '8.1.0'), 'media', 'versión sin soporte de seguridad (verificar en php.net/supported-versions)', 'Actualizar a una versión de PHP con soporte.');
+
+
+    // Cabeceras en profundidad
+    if (sec.headersOk) {
+      const csp = h['content-security-policy'] || '';
+      if (csp) {
+        const dir = {}; csp.split(';').forEach(x => { const [k, ...v] = x.trim().split(/\s+/); if (k) dir[k.toLowerCase()] = v.join(' '); });
+        const sc = dir['script-src'] !== undefined ? dir['script-src'] : dir['default-src'];
+        if (sc === undefined) add('seguridad', 'media', 'La CSP no restringe scripts (sin script-src ni default-src)', '', 'Agregar script-src o default-src.');
+        else {
+          if (/'unsafe-inline'/.test(sc) && !/'(nonce-|sha(256|384|512)-)/.test(sc)) add('seguridad', 'media', "La CSP permite 'unsafe-inline' en scripts", 'Anula gran parte de la protección contra XSS.', 'Usar nonces o hashes en lugar de unsafe-inline.');
+          if (/'unsafe-eval'/.test(sc)) add('seguridad', 'baja', "La CSP permite 'unsafe-eval'", '', 'Eliminar eval() y retirar unsafe-eval.');
+          if (/(^|\s)(\*|https?:|data:)(\s|$)/.test(sc)) add('seguridad', 'media', 'La CSP de scripts admite comodines (*, http:, data:)', '', 'Listar solo los orígenes necesarios.');
+        }
+        if (!dir['object-src'] && !dir['default-src']) add('seguridad', 'baja', 'La CSP no define object-src', '', "Agregar object-src 'none'.");
+        if (!dir['base-uri']) add('seguridad', 'baja', 'La CSP no define base-uri', '', "Agregar base-uri 'self'.");
+      } else if (h['content-security-policy-report-only']) add('seguridad', 'baja', 'La CSP está solo en modo informe (Report-Only)', 'No bloquea nada todavía.', 'Pasar a modo de cumplimiento cuando los informes estén limpios.');
+      const hs = h['strict-transport-security'];
+      if (hs) {
+        const ma = +((/max-age=([0-9]+)/i.exec(hs) || [])[1] || 0);
+        if (ma < 15552000) add('seguridad', 'baja', `HSTS con max-age corto (${Math.round(ma / 86400)} días)`, '', 'Usar max-age de al menos 15552000 (180 días); ideal 31536000.');
+        if (!/includeSubDomains/i.test(hs)) add('seguridad', 'baja', 'HSTS sin includeSubDomains', '', 'Agregar includeSubDomains cuando todos los subdominios usen HTTPS.');
+      }
+      if (/^(unsafe-url|no-referrer-when-downgrade)$/i.test((h['referrer-policy'] || '').trim())) add('seguridad', 'baja', 'Referrer-Policy filtra la URL completa a terceros: ' + h['referrer-policy'], '', 'Usar strict-origin-when-cross-origin.');
+      if (h['access-control-allow-origin'] === '*' && /true/i.test(h['access-control-allow-credentials'] || '')) add('seguridad', 'alta', 'CORS abierto (*) con credenciales', '', 'Restringir Access-Control-Allow-Origin a orígenes concretos.');
+      if ((p.title || sec.cookies.length) && d.privacy && d.privacy.passwordFields && !/no-store/i.test(h['cache-control'] || '')) add('seguridad', 'baja', 'Página con campos de contraseña sin Cache-Control: no-store', '', 'Evitar que se guarde en caché de proxies o del navegador.');
+    }
+    // Archivos públicos
+    const fl = d.files;
+    if (fl) {
+      if (fl.robots.ok && fl.robots.disallowAll) add('seo', 'alta', 'robots.txt bloquea todo el sitio (Disallow: /)', '', 'Quitar el bloqueo si el sitio debe indexarse.');
+      else if (!fl.robots.ok) add('seo', 'baja', 'No se encontró robots.txt', '', 'Publicar /robots.txt con la referencia al sitemap.'); else add('seo', 'ok', 'robots.txt presente');
+      if (!fl.sitemap.ok) add('seo', 'baja', 'No se encontró sitemap.xml', '', 'Publicar un sitemap y referenciarlo en robots.txt.'); else add('seo', 'ok', 'Sitemap presente' + (fl.sitemap.urls ? ` (${fl.sitemap.urls} entradas)` : ''));
+      if (fl.robots.sensitive && fl.robots.sensitive.length) add('seguridad', 'baja', 'robots.txt delata rutas sensibles: ' + fl.robots.sensitive.join(', '), 'Los atacantes leen robots.txt para encontrar paneles ocultos.', 'Proteger esas rutas con autenticación; no depender de robots.txt.');
+      fl.security.ok ? add('seguridad', 'ok', 'security.txt publicado') : add('seguridad', 'baja', 'Sin /.well-known/security.txt', 'Los investigadores no saben cómo reportar vulnerabilidades.', 'Publicar security.txt (RFC 9116) con un contacto.');
+    }
+    // SEO / accesibilidad / rendimiento extra
+    if (s.words < 300 && s.words > 0) add('seo', 'baja', `Contenido escaso: ${s.words} palabras visibles`, '', 'Ampliar el contenido útil de la página.');
+    if (s.headingSkips) add('accesibilidad', 'baja', `${s.headingSkips} saltos en la jerarquía de encabezados`, '', 'No saltar niveles (H2 → H4).');
+    if (s.genericLinks) add('seo', 'baja', `${s.genericLinks} enlaces con texto genérico («aquí», «ver más»)`, '', 'Usar textos descriptivos para accesibilidad y SEO.');
+    if (s.dupIds) add('accesibilidad', 'baja', `${s.dupIds} IDs duplicados en el HTML`, '', 'Los id deben ser únicos.');
+    if (s.tabindexPos) add('accesibilidad', 'baja', `${s.tabindexPos} elementos con tabindex positivo`, '', 'Usar tabindex 0 o -1 y orden natural del DOM.');
+    if (s.iframesNoTitle) add('accesibilidad', 'baja', `${s.iframesNoTitle} iframes sin título`, '', 'Agregar title a cada iframe.');
+    if (s.autoplay) add('accesibilidad', 'media', `${s.autoplay} medios con autoplay y sonido`, '', 'Silenciar o quitar la reproducción automática.');
+    if (f.cls != null) f.cls > 0.25 ? add('rendimiento', 'alta', `CLS deficiente: ${f.cls}`, 'La página «salta» mientras carga.', 'Reservar espacio para imágenes, anuncios y fuentes.') : f.cls > 0.1 ? add('rendimiento', 'media', `CLS mejorable: ${f.cls}`, '', 'Declarar dimensiones de imágenes y reservar espacio.') : add('rendimiento', 'ok', `CLS ${f.cls}`);
+    if (f.beacons > 10) add('privacidad', 'baja', `${f.beacons} envíos de telemetría en segundo plano (beacons)`, 'Datos enviados sin que lo notes.', 'Usar un bloqueador de rastreadores.');
 
     // SEO
     const tl = p.title.length;
@@ -193,7 +265,7 @@ const Analysis = (() => {
   }
 
   // Resumen compacto para el historial
-  const snapshot = (d, a) => ({ t: d.ts, techs: d.techs.map(t => t.n + (t.v ? '@' + t.v : '')), plugins: Object.entries(d.wp.plugins).map(([k, v]) => k + (v ? '@' + v : '')),
+  const snapshot = (d, a) => ({ host: d.host, trackers: privacyReport(d).collectors.map(c => c.name), third: d.perf.thirdPartyHosts, req: d.perf.requests, lcp: d.perf.lcp, ttfb: d.perf.ttfb, t: d.ts, techs: d.techs.map(t => t.n + (t.v ? '@' + t.v : '')), plugins: Object.entries(d.wp.plugins).map(([k, v]) => k + (v ? '@' + v : '')),
     scores: a.scores, overall: a.overall, counts: a.counts, hdr: a.headerGrade.grade, title: d.page.title });
   function diff(prev, cur) {
     if (!prev) return null;
@@ -219,17 +291,30 @@ const Analysis = (() => {
     else if (dmarc && /p=none/i.test(dmarc)) issues.push(['baja', 'DMARC en modo p=none (solo monitoreo)', 'Pasar a quarantine/reject cuando el correo esté alineado.']);
     if (!r.CAA.length) issues.push(['baja', 'Sin registros CAA', 'Restringir qué autoridades pueden emitir certificados.']);
     if (!r.AAAA.length) issues.push(['baja', 'Sin IPv6 (AAAA)', 'Opcional: habilitar IPv6.']);
-    return { dnsProvider: pick(NS_PROV, r.NS), mailProvider: pick(MX_PROV, r.MX.map(m => m.replace(/^[0-9]+ /, ''))), spf: spf || '', dmarc: dmarc || '',
+    if (r.dnssec === false) issues.push(['baja', 'DNSSEC no activo', 'Protege contra falsificación de respuestas DNS.', 'Activar DNSSEC en el registrador/proveedor DNS.']);
+    if (r.MX.length && !(r.MTASTS || []).length) issues.push(['baja', 'Sin MTA-STS', 'Obliga a cifrar el correo entrante.', 'Publicar TXT _mta-sts y la política en /.well-known/mta-sts.txt.']);
+    return { dnssec: r.dnssec, mtasts: (r.MTASTS || []).length > 0, dnsProvider: pick(NS_PROV, r.NS), mailProvider: pick(MX_PROV, r.MX.map(m => m.replace(/^[0-9]+ /, ''))), spf: spf || '', dmarc: dmarc || '',
       verifications: Array.from(new Set(txt.filter(x => /(site-verification|^MS=|facebook-domain|apple-domain|atlassian|stripe-verification|docusign|zoom)/i.test(x)).map(x => x.split(/[=:]/)[0]))), issues };
   }
+  // Comparación lado a lado de dos sitios a partir de sus snapshots
+  function compare(A, B) {
+    const names = (s) => new Set(s.techs.map(t => t.split('@')[0]));
+    const a = names(A), b = names(B);
+    const shared = [...a].filter(x => b.has(x)), onlyA = [...a].filter(x => !b.has(x)), onlyB = [...b].filter(x => !a.has(x));
+    const rows = [['Nota global', A.overall, B.overall, 'hi'], ...Object.keys(AREAS).map(k => [AREAS[k], A.scores[k], B.scores[k], 'hi']),
+      ['Servicios de rastreo', (A.trackers || []).length, (B.trackers || []).length, 'lo'], ['Dominios de terceros', A.third, B.third, 'lo'],
+      ['Peticiones HTTP', A.req, B.req, 'lo'], ['LCP (ms)', A.lcp, B.lcp, 'lo'], ['TTFB (ms)', A.ttfb, B.ttfb, 'lo']];
+    const trA = new Set(A.trackers || []), trB = new Set(B.trackers || []);
+    return { rows, hdr: [A.hdr, B.hdr], shared, onlyA, onlyB, trShared: [...trA].filter(x => trB.has(x)), trOnlyA: [...trA].filter(x => !trB.has(x)), trOnlyB: [...trB].filter(x => !trA.has(x)) };
+  }
   const markdown = (d, a, dns) => {
-    const L = [`# Informe Promptio Detector: ${d.host}`, `${d.url}  `, `Analizado: ${new Date(d.ts).toLocaleString('es-CL')}`, '',
+    const L = [`# Informe LINCEO DETECTOR: ${d.host}`, `${d.url}  `, `Analizado: ${new Date(d.ts).toLocaleString('es-CL')}`, '',
       `**Nota global:** ${a.overall}/100 · **Cabeceras:** ${a.headerGrade.grade}`, '', '| Área | Puntaje |', '|---|---|', ...Object.keys(AREAS).map(k => `| ${AREAS[k]} | ${a.scores[k]} |`), '', '## Qué mejorar'];
     ['alta', 'media', 'baja'].forEach(sv => { const it = a.issues.filter(i => i.sev === sv); if (it.length) { L.push(`\n**Prioridad ${sv}**`); it.forEach(i => L.push(`- [${AREAS[i.area]}] ${i.t}${i.fix ? ' → ' + i.fix : ''}`)); } });
     L.push('', '## Tecnologías'); d.techs.forEach(t => L.push(`- ${t.n}${t.v ? ' ' + t.v : ''} (${t.c})`));
     if (dns) { L.push('', '## DNS', `- DNS: ${dns.s.dnsProvider.join(', ') || '?'} · Correo: ${dns.s.mailProvider.join(', ') || '?'}`); }
     return L.join('\n');
   };
-  return { AREAS, audit, privacyReport, KIND, headerGrade, snapshot, diff, dnsSummary, markdown };
+  return { AREAS, compare, audit, privacyReport, KIND, cookieAudit, verdict, headerGrade, snapshot, diff, dnsSummary, markdown };
 })();
 if (typeof module !== 'undefined') module.exports = Analysis;

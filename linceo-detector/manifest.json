@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "LINCEO DETECTOR: stack, privacidad y seguridad de cualquier web",
+  "short_name": "LINCEO",
+  "version": "1.1.0",
+  "description": "Descubre el stack de un sitio, qué datos tuyos recopila y qué riesgos tiene (rastreo, grabación de sesión, phishing), con acciones claras. Auditoría, DNS e historial. Sin enviar tus datos.",
+  "minimum_chrome_version": "102",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "action": {
+    "default_title": "LINCEO DETECTOR: analizar este sitio",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "optional_permissions": [
+    "cookies"
+  ],
+  "optional_host_permissions": [
+    "*://*/*"
+  ]
+}

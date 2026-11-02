@@ -42,6 +42,14 @@ async function scanPage(SIGS) {
       setTimeout(() => { po.disconnect(); done(); }, 80);
     } catch (e) { done(); }
   });
+  let cls = 0;
+  await new Promise(done => {
+    try {
+      const po = new PerformanceObserver(l => l.getEntries().forEach(e => { if (!e.hadRecentInput) cls += e.value; }));
+      po.observe({ type: 'layout-shift', buffered: true });
+      setTimeout(() => { po.disconnect(); done(); }, 60);
+    } catch (e) { done(); }
+  });
   const fcpE = performance.getEntriesByName('first-contentful-paint')[0];
 
   const urlSet = new Set(res.map(r => r.u));
@@ -163,6 +171,12 @@ async function scanPage(SIGS) {
     renderBlocking: head ? qa('script[src]:not([async]):not([defer]):not([type=module])', head).length : 0,
     domNodes: D.getElementsByTagName('*').length,
     words: D.body ? txt(D.body.innerText).split(' ').filter(Boolean).length : 0,
+    dupIds: (() => { const c = {}; qa('[id]').forEach(e => { c[e.id] = (c[e.id] || 0) + 1; }); return Object.values(c).filter(n => n > 1).length; })(),
+    tabindexPos: qa('[tabindex]').filter(e => +e.getAttribute('tabindex') > 0).length,
+    iframesNoTitle: qa('iframe').filter(f => !f.title && !f.getAttribute('aria-label')).length,
+    autoplay: qa('video[autoplay]:not([muted]),audio[autoplay]').length,
+    headingSkips: (() => { let prev = 0, n = 0; qa('h1,h2,h3,h4,h5,h6').forEach(h => { const l = +h.tagName[1]; if (prev && l > prev + 1) n++; prev = l; }); return n; })(),
+    genericLinks: links.filter(a => /^(click aqu[ií]|aqu[ií]|ver m[aá]s|leer m[aá]s|m[aá]s|read more|click here|here|more|link|saber m[aá]s)$/i.test(txt(a.textContent))).length,
     hasMain: !!q('main,[role=main]'), zoomBlocked: /user-scalable\s*=\s*(no|0)/i.test(meta['viewport'] || '') || /maximum-scale\s*=\s*1(\.0)?(\s|,|$)/i.test(meta['viewport'] || '')
   };
 
@@ -190,6 +204,9 @@ async function scanPage(SIGS) {
     modernImg, legacyImg,
     thirdParty: Object.values(tp).sort((a, b) => b.n - a.n || b.s - a.s).slice(0, 40),
     thirdPartyHosts: Object.keys(tp).length, thirdPartyAll: Object.keys(tp).slice(0, 120),
+    cls: Math.round(cls * 1000) / 1000,
+    beacons: res.filter(r => ['beacon', 'ping'].includes(r.t)).length,
+    beaconHosts: Array.from(new Set(res.filter(r => ['beacon', 'ping', 'fetch', 'xmlhttprequest'].includes(r.t)).map(r => { try { return new URL(r.u).hostname; } catch (e) { return ''; } }).filter(h => h && base(h) !== myBase))).slice(0, 30),
     heaviest: res.slice().sort((a, b) => b.s - a.s).slice(0, 5).map(r => ({ u: r.u.slice(0, 160), s: r.s }))
   };
 
@@ -270,7 +287,36 @@ async function scanPage(SIGS) {
   pr.cookieNames = cookieNames.slice(0, 60);
   pr.origin = L.origin;
 
+  // ── Archivos públicos estándar (solo lectura, mismo origen; no se sondean rutas sensibles)
+  const probe = async (path, max) => {
+    try {
+      const r = await fetch(path, { credentials: 'omit', cache: 'no-store' });
+      if (!r.ok) return { ok: false, status: r.status };
+      return { ok: true, text: (await r.text()).slice(0, max) };
+    } catch (e) { return null; }
+  };
+  const [rb, sm, sx] = await Promise.all([probe('/robots.txt', 60000), probe('/sitemap.xml', 30000), probe('/.well-known/security.txt', 8000)]);
+  const files = { robots: { ok: false }, sitemap: { ok: false, urls: 0, fromRobots: false }, security: { ok: false } };
+  if (rb && rb.ok && !/^\s*</.test(rb.text)) {
+    const lines = rb.text.split(/\r?\n/);
+    let star = false, disallowAll = false;
+    const dis = [];
+    lines.forEach(l => {
+      const m = /^\s*(user-agent|disallow|sitemap)\s*:\s*(.*)$/i.exec(l.replace(/#.*/, ''));
+      if (!m) return;
+      const k = m[1].toLowerCase(), v = m[2].trim();
+      if (k === 'user-agent') star = v === '*';
+      else if (k === 'disallow' && star) { if (v === '/') disallowAll = true; if (v) dis.push(v); }
+    });
+    files.robots = { ok: true, disallowAll, disallows: dis.length, sensitive: dis.filter(p => /admin|backup|private|staging|test|dev|tmp|old|secret|cgi|login|wp-admin|config/i.test(p)).slice(0, 6),
+      sitemaps: (rb.text.match(/^\s*sitemap\s*:\s*\S+/gim) || []).length };
+  }
+  if (sm && sm.ok && /<(urlset|sitemapindex)/i.test(sm.text)) files.sitemap = { ok: true, urls: (sm.text.match(/<loc>/gi) || []).length, index: /<sitemapindex/i.test(sm.text) };
+  else if (files.robots.sitemaps) files.sitemap = { ok: true, urls: 0, fromRobots: true };
+  if (sx && sx.ok && /^\s*contact\s*:/im.test(sx.text)) files.security = { ok: true, contact: ((/^\s*contact\s*:\s*(.+)$/im.exec(sx.text) || [])[1] || '').slice(0, 80), expires: ((/^\s*expires\s*:\s*(.+)$/im.exec(sx.text) || [])[1] || '').slice(0, 40) };
+
   return {
+    files,
     privacy: pr,
     ts: Date.now(), url: L.href, host: L.hostname, page, structure, perf, security,
     wp: { plugins: wpPlugins, themes: wpThemes },

@@ -1,6 +1,6 @@
-# Política de privacidad de Promptio Detector
+# Política de privacidad de LINCEO DETECTOR
 
-Promptio Detector analiza la página que tienes abierta **solo cuando pulsas el icono de la extensión**. Todo el análisis ocurre en tu navegador.
+LINCEO DETECTOR analiza la página que tienes abierta **solo cuando pulsas el icono de la extensión**. Todo el análisis ocurre en tu navegador.
 
 - **No recopilamos, vendemos ni transmitimos** datos personales, historial de navegación ni contenido de las páginas a servidores del desarrollador. No hay servidores propios ni analítica.
 - **Almacenamiento local:** se guarda en `chrome.storage.local` el último análisis y un historial de hasta 15 análisis por sitio (tecnologías, puntajes) para mostrar «Cambios». Puedes borrarlo con «Borrar historial».
@@ -9,3 +9,6 @@ Promptio Detector analiza la página que tienes abierta **solo cuando pulsas el 
 - Los valores de cookies, almacenamiento y formularios **no se leen ni se guardan**; solo nombres y tamaños.
 
 Contacto: completar con el correo del publicador antes de publicar.
+
+- **Cookies a fondo (opcional):** si lo aceptas, Chrome concede a la extensión acceso a las cookies del sitio analizado; se leen para mostrarlas en pantalla y no se guardan ni se envían.
+- **Edad del dominio (RDAP):** al consultar DNS también se envía el dominio a `rdap.org` para mostrar la fecha de registro.
